@@ -20,7 +20,10 @@ extras_require = {
         'wsaccel==0.6.2',
     ],
     'sharding': ['gipc==0.6.0'],
-    'docs': ['biblio==0.0.4'],
+    'docs': [
+        'sphinx==2.4.4',
+        'groundwork-sphinx-theme==1.1.1'
+    ],
 }
 
 setup(

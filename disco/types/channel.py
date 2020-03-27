@@ -50,6 +50,8 @@ class PermissionOverwrite(ChannelSubType):
         All allowed permissions.
     deny : :class:`disco.types.permissions.PermissionValue`
         All denied permissions.
+    compiled : :class:`disco.types.permissions.PermissionValue`
+        All permissions, both allowed and denied
     """
     id = Field(snowflake)
     type = Field(enum(PermissionOverwriteType))
@@ -60,6 +62,27 @@ class PermissionOverwrite(ChannelSubType):
 
     @classmethod
     def create_for_channel(cls, channel, entity, allow=0, deny=0):
+        """"
+        Creates a permission overwrite
+
+        Generates a permission overwrite for a channel given the entity and the permission bitsets provided.
+
+        Parameters
+        ---------
+        channel : :class:`disco.types.channel.Channel`
+            Channel to apply permission overwrite too
+        entity : :class:`disco.types.guild.Role` or :class:`disco.types.guild.GuildMember`
+            The role or member to provide or deny permissions too
+        allow : :class:`disco.types.permissions.Permissions`, optional
+            Permissions to allow the role or user for the channel
+        deny : :class:`disco.types.permissions.Permissions` optional
+            Permissions to deny the role or user for the channel
+
+        Returns
+        -------
+        :class:`disco.types.channel.PermissionOverwrite`
+            An instance of the overwrite that was created
+        """
         from disco.types.guild import Role
 
         ptype = PermissionOverwriteType.ROLE if isinstance(entity, Role) else PermissionOverwriteType.MEMBER
@@ -80,6 +103,22 @@ class PermissionOverwrite(ChannelSubType):
         return value
 
     def save(self, **kwargs):
+        """
+        Send discord this permission overwrite
+
+        This method is used if you created a permission overwrite without uploading it.
+        For most use cases, use the create_for_channel classmethod instead.
+
+        Parameters
+        ----------
+        kwargs
+            Extra arguments to provide channels_permissions_modify
+
+        Returns
+        -------
+        :class:`disco.types.channel.PermissionOverwrite`
+            Returns itself, no changes made
+        """
         self.client.api.channels_permissions_modify(self.channel_id,
                                                     self.id,
                                                     self.allow.value or 0,
@@ -89,6 +128,17 @@ class PermissionOverwrite(ChannelSubType):
         return self
 
     def delete(self, **kwargs):
+        """
+        Delete permission overwrite
+
+        Removes this permission overwrite instance from it's channel. You can reverse this change with the save method.
+
+        Parameters
+        ----------
+        kwargs
+            Extra arguments to provide channels_permissions_delete
+
+        """
         self.client.api.channels_permissions_delete(self.channel_id, self.id, **kwargs)
 
 
@@ -100,7 +150,7 @@ class Channel(SlottedModel, Permissible):
     ----------
     id : snowflake
         The channel ID.
-    guild_id : Optional[snowflake]
+    guild_id : snowflake, optional
         The guild id this channel is part of.
     name : str
         The channel's name.
@@ -118,6 +168,10 @@ class Channel(SlottedModel, Permissible):
         The type of this channel.
     overwrites : dict(snowflake, :class:`disco.types.channel.PermissionOverwrite`)
         Channel permissions overwrites.
+    mention : str
+        The channel's mention
+    guild : :class:`disco.types.guild.Guild`, optional
+        Guild this channel belongs to (or None if not applicable).
     """
     id = Field(snowflake)
     guild_id = Field(snowflake)
@@ -151,6 +205,15 @@ class Channel(SlottedModel, Permissible):
     def get_permissions(self, user):
         """
         Get the permissions a user has in the channel.
+
+        This method will first apply the user's permissions based on their roles and / or if they're the owner.
+        It will then overwrite those permissions with the channel's permission overwrites.
+        If the channel is a DM, the user is considered an administrator.
+
+        Parameters
+        ----------
+        user : :class:`disco.types.user.User` or :class:`disco.types.guild.GuildMember`
+            A user-like instance of the ID of a user to get the permissions for
 
         Returns
         -------
@@ -238,9 +301,6 @@ class Channel(SlottedModel, Permissible):
 
     @cached_property
     def guild(self):
-        """
-        Guild this channel belongs to (or None if not applicable).
-        """
         return self.client.state.guilds.get(self.guild_id)
 
     @cached_property
@@ -252,8 +312,15 @@ class Channel(SlottedModel, Permissible):
 
     def messages_iter(self, **kwargs):
         """
+        Creates message iterator
+
         Creates a new `MessageIterator` for the channel with the given keyword
         arguments.
+
+        Parameters
+        ----------
+        kwargs
+            Extra arguments to be passed into :class:`disco.types.channel.MessageIterator`
         """
         return MessageIterator(self.client, self, **kwargs)
 
@@ -261,6 +328,10 @@ class Channel(SlottedModel, Permissible):
         """
         Attempts to fetch and return a `Message` from the message object
         or id.
+
+        Arguments
+        ---------
+        message : `Message` or snowflake
 
         Returns
         -------
@@ -293,6 +364,10 @@ class Channel(SlottedModel, Permissible):
 
     def get_pins(self):
         """
+        Get pinned messages
+
+        Messages that have been pinned to this channel if any are returned
+
         Returns
         -------
         list(`Message`)
