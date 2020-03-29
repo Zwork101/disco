@@ -44,13 +44,13 @@ class PermissionOverwrite(ChannelSubType):
     ----------
     id : snowflake
         The overwrite ID.
-    type : :const:`disco.types.channel.PermissionsOverwriteType`
+    type : :const:`~disco.types.channel.PermissionsOverwriteType`
         The overwrite type.
-    allow : :class:`disco.types.permissions.PermissionValue`
+    allow : :class:`~disco.types.permissions.PermissionValue`
         All allowed permissions.
-    deny : :class:`disco.types.permissions.PermissionValue`
+    deny : :class:`~disco.types.permissions.PermissionValue`
         All denied permissions.
-    compiled : :class:`disco.types.permissions.PermissionValue`
+    compiled : :class:`~disco.types.permissions.PermissionValue`
         All permissions, both allowed and denied
     """
     id = Field(snowflake)
@@ -69,18 +69,18 @@ class PermissionOverwrite(ChannelSubType):
 
         Parameters
         ---------
-        channel : :class:`disco.types.channel.Channel`
+        channel : :class:`~disco.types.channel.Channel`
             Channel to apply permission overwrite too
-        entity : :class:`disco.types.guild.Role` or :class:`disco.types.guild.GuildMember`
+        entity : :class:`~disco.types.guild.Role` or :class:`~disco.types.guild.GuildMember`
             The role or member to provide or deny permissions too
-        allow : :class:`disco.types.permissions.Permissions`, optional
+        allow : :class:`~disco.types.permissions.Permissions`, optional
             Permissions to allow the role or user for the channel
-        deny : :class:`disco.types.permissions.Permissions` optional
+        deny : :class:`~disco.types.permissions.Permissions` optional
             Permissions to deny the role or user for the channel
 
         Returns
         -------
-        :class:`disco.types.channel.PermissionOverwrite`
+        :class:`~disco.types.channel.PermissionOverwrite`
             An instance of the overwrite that was created
         """
         from disco.types.guild import Role
@@ -104,7 +104,7 @@ class PermissionOverwrite(ChannelSubType):
 
     def save(self, **kwargs):
         """
-        Send discord this permission overwrite
+        Send discord the permission overwrite
 
         This method is used if you created a permission overwrite without uploading it.
         For most use cases, use the create_for_channel classmethod instead.
@@ -116,7 +116,7 @@ class PermissionOverwrite(ChannelSubType):
 
         Returns
         -------
-        :class:`disco.types.channel.PermissionOverwrite`
+        :class:`~disco.types.channel.PermissionOverwrite`
             Returns itself, no changes made
         """
         self.client.api.channels_permissions_modify(self.channel_id,
@@ -131,13 +131,12 @@ class PermissionOverwrite(ChannelSubType):
         """
         Delete permission overwrite
 
-        Removes this permission overwrite instance from it's channel. You can reverse this change with the save method.
+        Removes the permission overwrite instance from it's channel. You can reverse the change with the save method.
 
         Parameters
         ----------
         kwargs
             Extra arguments to provide channels_permissions_delete
-
         """
         self.client.api.channels_permissions_delete(self.channel_id, self.id, **kwargs)
 
@@ -151,7 +150,7 @@ class Channel(SlottedModel, Permissible):
     id : snowflake
         The channel ID.
     guild_id : snowflake, optional
-        The guild id this channel is part of.
+        The guild id the channel is part of.
     name : str
         The channel's name.
     topic : str
@@ -162,16 +161,16 @@ class Channel(SlottedModel, Permissible):
         The channel's bitrate.
     user_limit : int
         The channel's user limit.
-    recipients : list(:class:`disco.types.user.User`)
-        Members of this channel (if this is a DM channel).
-    type : :const:`ChannelType`
-        The type of this channel.
-    overwrites : dict(snowflake, :class:`disco.types.channel.PermissionOverwrite`)
+    recipients : list of :class:`~disco.types.user.User`
+        Members of the channel (if the is a DM channel).
+    type : :const:`~disco.types.channel.ChannelType`
+        The type of the channel.
+    overwrites : dict of snowflake to :class:`~disco.types.channel.PermissionOverwrite`
         Channel permissions overwrites.
     mention : str
         The channel's mention
-    guild : :class:`disco.types.guild.Guild`, optional
-        Guild this channel belongs to (or None if not applicable).
+    guild : :class:`~disco.types.guild.Guild`, optional
+        Guild the channel belongs to (or None if not applicable).
     """
     id = Field(snowflake)
     guild_id = Field(snowflake)
@@ -212,12 +211,12 @@ class Channel(SlottedModel, Permissible):
 
         Parameters
         ----------
-        user : :class:`disco.types.user.User` or :class:`disco.types.guild.GuildMember`
+        user : :class:`~disco.types.user.User` or :class:`~disco.types.guild.GuildMember`
             A user-like instance of the ID of a user to get the permissions for
 
         Returns
         -------
-        :class:`disco.types.permissions.PermissionValue`
+        :class:`~disco.types.permissions.PermissionValue`
             Computed permission value for the user.
         """
         if not self.guild_id:
@@ -252,7 +251,7 @@ class Channel(SlottedModel, Permissible):
     @property
     def is_guild(self):
         """
-        Whether this channel belongs to a guild.
+        Whether the channel belongs to a guild.
         """
         return self.type in (
             ChannelType.GUILD_TEXT,
@@ -264,7 +263,7 @@ class Channel(SlottedModel, Permissible):
     @property
     def is_news(self):
         """
-        Whether this channel contains news for the guild (used for verified guilds
+        Whether the channel contains news for the guild (used for verified guilds
         to produce activity feed news).
         """
         return self.type == ChannelType.GUILD_NEWS
@@ -272,30 +271,30 @@ class Channel(SlottedModel, Permissible):
     @property
     def is_dm(self):
         """
-        Whether this channel is a DM (does not belong to a guild).
+        Whether the channel is a DM (does not belong to a guild).
         """
         return self.type in (ChannelType.DM, ChannelType.GROUP_DM)
 
     @property
     def is_nsfw(self):
         """
-        Whether this channel is an NSFW channel.
+        Whether the channel is an NSFW channel.
         """
         return bool(self.type == ChannelType.GUILD_TEXT and (self.nsfw or NSFW_RE.match(self.name)))
 
     @property
     def is_voice(self):
         """
-        Whether this channel supports voice.
+        Whether the channel supports voice.
         """
         return self.type in (ChannelType.GUILD_VOICE, ChannelType.GROUP_DM)
 
     @property
     def messages(self):
         """
-        A default `MessageIterator` for the channel, can be used to quickly and
+        A default :class:`~disco.types.channel.MessageIterator` for the channel, can be used to quickly and
         easily iterate over the channels entire message history. For more control,
-        use `Channel.messages_iter`.
+        use :func:`~disco.types.channel.Channel.messages_iter`.
         """
         return self.messages_iter()
 
@@ -306,7 +305,7 @@ class Channel(SlottedModel, Permissible):
     @cached_property
     def parent(self):
         """
-        Parent this channel belongs to (or None if not applicable).
+        Parent the channel belongs to (or None if not applicable).
         """
         return self.guild.channels.get(self.parent_id)
 
@@ -314,13 +313,13 @@ class Channel(SlottedModel, Permissible):
         """
         Creates message iterator
 
-        Creates a new `MessageIterator` for the channel with the given keyword
+        Creates a new :class:`~disco.types.channel.MessageIterator` for the channel with the given keyword
         arguments.
 
         Parameters
         ----------
         kwargs
-            Extra arguments to be passed into :class:`disco.types.channel.MessageIterator`
+            Extra arguments to be passed into :class:`~disco.types.channel.MessageIterator`
         """
         return MessageIterator(self.client, self, **kwargs)
 
@@ -331,32 +330,47 @@ class Channel(SlottedModel, Permissible):
 
         Arguments
         ---------
-        message : `Message` or snowflake
+        message : :class:`~disco.types.message.Message` or snowflake
 
         Returns
         -------
-        `Message`
+        :class:`~disco.types.message.Message`
             The fetched message.
         """
         return self.client.api.channels_messages_get(self.id, to_snowflake(message))
 
     def get_invites(self):
         """
+        Finds invites for the channel
+
+        Invites are not global for a server like they used to be, and now must be created for specific channels.
+        This method finds all the invites that use the channel as the landing page.
+
         Returns
         -------
-        list(`Invite`)
-            Returns a list of all invites for this channel.
+        list of :class:`~disco.types.invite.Invite`
+            Returns a list of all invites for the channel.
         """
         return self.client.api.channels_invites_list(self.id)
 
     def create_invite(self, *args, **kwargs):
         """
+        Create an invite for the channel
+
         Attempts to create a new invite with the given arguments. For more
-        information see `Invite.create_for_channel`.
+        information see :func:`~disco.types.invite.Invite.create_for_channel`.
+
+        Parameters
+        ----------
+        args
+            Arguments to be passed into :func:`~disco.types.invite.Invite.create_for_channel`
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.types.invite.Invite.create_for_channel`
 
         Returns
         -------
-        `Invite`
+        :class:`~disco.types.invite.Invite`
+            The generated invite for the channel
         """
 
         from disco.types.invite import Invite
@@ -366,22 +380,23 @@ class Channel(SlottedModel, Permissible):
         """
         Get pinned messages
 
-        Messages that have been pinned to this channel if any are returned
+        Messages that have been pinned to the channel if there are any
 
         Returns
         -------
-        list(`Message`)
-            Returns a list of all pinned messages for this channel.
+        list of :class:`~disco.types.message.Message`
+            Returns a list of all pinned messages for the channel.
         """
         return self.client.api.channels_pins_list(self.id)
 
     def create_pin(self, message):
         """
         Pins the given message to the channel.
+        
 
         Parameters
         ----------
-        message : `Message`|snowflake
+        message : :class:`~disco.types.message.Message` or snowflake
             The message or message ID to pin.
         """
         self.client.api.channels_pins_create(self.id, to_snowflake(message))
@@ -392,24 +407,35 @@ class Channel(SlottedModel, Permissible):
 
         Parameters
         ----------
-        message : `Message`|snowflake
+        message : :class:`~disco.types.message.Message` or snowflake
             The message or message ID to pin.
         """
         self.client.api.channels_pins_delete(self.id, to_snowflake(message))
 
     def get_webhooks(self):
         """
+        Fetchs all webhooks operating on the channel
+        
         Returns
         -------
-        list(`Webhook`)
-            Returns a list of all webhooks for this channel.
+        list of :class:`~disco.types.webhook.Webhook`
+            Returns a list of all webhooks for the channel.
         """
         return self.client.api.channels_webhooks_list(self.id)
 
     def create_webhook(self, *args, **kwargs):
         """
-        Creates a webhook for this channel. See `APIClient.channels_webhooks_create`
+        Creates a webhook
+
+        Creates a webhook for the channel. See :func:`~disco.api.client.APIClient.channels_webhooks_create`
         for more information.
+
+        Parameters
+        ----------
+        args
+            Arguments to be passed into :func:`~disco.api.client.APIClient.channels_webhooks_create`
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.api.client.APIClient.channels_webhooks_create`
 
         Returns
         -------
@@ -420,37 +446,58 @@ class Channel(SlottedModel, Permissible):
 
     def send_message(self, *args, **kwargs):
         """
-        Send a message to this channel. See `APIClient.channels_messages_create`
+        Send a message
+
+        Send a message to the channel. See :func:`~disco.api.client.APIClient.channels_messages_create`
         for more information.
+
+        Parameters
+        ----------
+        args
+            Arguments to be passed into :func:`~disco.api.client.APIClient.channels_messages_create`
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.api.client.APIClient.channels_messages_create`
 
         Returns
         -------
-        `disco.types.message.Message`
-            The created message.
+        :class:`~disco.types.message.Message`
+            The sent message.
         """
         return self.client.api.channels_messages_create(self.id, *args, **kwargs)
 
     def send_typing(self):
         """
-        Sends a typing event to this channel. See `APIClient.channels_typing`
-        for more information.
+        Signal typing status
+
+        Sends a typing event to the channel. this will make it seem as though the bot is sending a message.
+        This status is removed if a message is not sent before another typing event is sent, or a message is sent.
+        See :func:`~disco.api.client.APIClient.channels_typing` for more information.
         """
         self.client.api.channels_typing(self.id)
 
     def create_overwrite(self, *args, **kwargs):
         """
-        Creates a `PermissionOverwrite` for this channel. See
-        `PermissionOverwrite.create_for_channel` for more information.
+        Create permission overwrite
+
+        Creates a `PermissionOverwrite` for the channel.
+        See `PermissionOverwrite.create_for_channel` for more information.
+
+        Parameters
+        ----------
+        args
+            Arguments to be passed into :func:`~disco.types.channel.PermissionOverwrite.create_for_channel`
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.types.channel.PermissionOverwrite.create_for_channel`
         """
         return PermissionOverwrite.create_for_channel(self, *args, **kwargs)
 
     def delete_message(self, message):
         """
-        Deletes a single message from this channel.
+        Deletes a single message from the channel.
 
         Parameters
         ----------
-        message : snowflake|`Message`
+        message : snowflake or :class:`~disco.types.message.Message`
             The message to delete.
         """
         self.client.api.channels_messages_delete(self.id, to_snowflake(message))
@@ -458,14 +505,16 @@ class Channel(SlottedModel, Permissible):
     @one_or_many
     def delete_messages(self, messages):
         """
+        Deletes many messages
+
         Deletes a set of messages using the correct API route based on the number
         of messages passed.
 
         Parameters
         ----------
-        messages : list(snowflake|`Message`)
+        messages : list of snowflake or list of :class:`~disco.types.message.Message`
             List of messages (or message ids) to delete. All messages must originate
-            from this channel.
+            from the channel.
         """
         message_ids = list(map(to_snowflake, messages))
 
@@ -480,13 +529,27 @@ class Channel(SlottedModel, Permissible):
                 self.delete_message(msg)
 
     def delete(self, **kwargs):
+        """
+        Delete guild channel
+
+        Parameters
+        ----------
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.api.client.APIClient.channels_delete`
+
+        Raises
+        ------
+        AssertionError
+            Raised is the channel is a DM, or if the bot doesn't have MANAGE_CHANNELS permissions for this guild.
+        """
         assert (self.is_dm or self.guild.can(self.client.state.me, Permissions.MANAGE_CHANNELS)), 'Invalid Permissions'
         self.client.api.channels_delete(self.id, **kwargs)
 
     def close(self):
         """
-        Closes a DM channel. This is intended as a safer version of `delete`,
-        enforcing that the channel is actually a DM.
+        Delete guild channel
+
+        Copy of :func:`~disco.types.channel.Channel.delete`, but doesn't check if the bot has correct permissions
         """
         assert self.is_dm, 'Cannot close non-DM channel'
         self.delete()
@@ -494,24 +557,79 @@ class Channel(SlottedModel, Permissible):
     def set_topic(self, topic, reason=None):
         """
         Sets the channels topic.
+
+        Parameters
+        ----------
+        topic : str
+            The channel's topic or description
+        reason : str, optional
+            The reason for setting the topic
+
+        Returns
+        -------
+        :class:`~disco.types.channel.Channel`
+            Updated version of the channel
         """
         return self.client.api.channels_modify(self.id, topic=topic, reason=reason)
 
     def set_name(self, name, reason=None):
         """
         Sets the channels name.
+
+        Parameters
+        ----------
+        name : str
+            The new channel name
+        reason : str
+            Reason for channel name update
+
+        Returns
+        -------
+        :class:`~disco.types.channel.Channel`
+            Updated version of the channel
         """
         return self.client.api.channels_modify(self.id, name=name, reason=reason)
 
     def set_position(self, position, reason=None):
         """
         Sets the channels position.
+
+        Change the order which channels are listed.
+
+        Parameters
+        ----------
+        position : int
+            The new channel position (Check the guild to see how many channels it has)
+        reason : str
+            Reason for channel position update
+
+        Returns
+        -------
+        :class:`~disco.types.channel.Channel`
+            Updated version of the channel
         """
         return self.client.api.channels_modify(self.id, position=position, reason=reason)
 
     def set_nsfw(self, value, reason=None):
         """
         Sets whether the channel is NSFW.
+
+        Parameters
+        ----------
+        value : bool
+            Whether the channel should be NSFW or not
+        reason : str
+            Reason for channel nsfw update
+
+        Returns
+        -------
+        :class:`~disco.types.channel.Channel`
+            Updated version of the channel
+
+        Raises
+        ------
+        AssertionError
+            Raised if the channel type isn't a guild text channel
         """
         assert (self.type == ChannelType.GUILD_TEXT)
         return self.client.api.channels_modify(self.id, nsfw=value, reason=reason)
@@ -519,6 +637,23 @@ class Channel(SlottedModel, Permissible):
     def set_bitrate(self, bitrate, reason=None):
         """
         Sets the channels bitrate.
+
+        Parameters
+        ----------
+        bitrate : int
+            The voice channel's new bitrate
+        reason : str
+            Reason for channel bitrate update
+
+        Returns
+        -------
+        :class:`~disco.types.channel.Channel`
+            Updated version of the channel
+
+        Raises
+        ------
+        AssertionError
+            Raised if the channel isn't a voice channel
         """
         assert (self.is_voice)
         return self.client.api.channels_modify(self.id, bitrate=bitrate, reason=reason)
@@ -526,6 +661,25 @@ class Channel(SlottedModel, Permissible):
     def set_user_limit(self, user_limit, reason=None):
         """
         Sets the channels user limit.
+
+        Voice channels can be capped at how many people can be in it, this method sets that limit.
+
+        Parameters
+        ----------
+        user_limit : int
+            The max amount of people in a voice channel
+        reason : str
+            Reason for channel user limit update
+
+        Returns
+        -------
+        :class:`~disco.types.channel.Channel`
+            Updated version of the channel
+
+        Raises
+        ------
+        AssertionError
+            Raised if channel isn't a voice channel
         """
         assert (self.is_voice)
         return self.client.api.channels_modify(self.id, user_limit=user_limit, reason=reason)
@@ -533,6 +687,25 @@ class Channel(SlottedModel, Permissible):
     def set_parent(self, parent, reason=None):
         """
         Sets the channels parent.
+
+        Channels can be organized under categories, this method moves the channel under a category
+
+        Parameters
+        ----------
+        parent : :class:`~disco.types.channel.Channel` or snowflake
+            The category to move the channel under
+        reason : str
+            Reason for channel parent update
+
+        Returns
+        -------
+        :class:`~disco.types.channel.Channel`
+            Updated version of the channel
+
+        Raises
+        ------
+        AssertionError
+            Raised if the channel doesn't belong to a guild
         """
         assert (self.is_guild)
         return self.client.api.channels_modify(
@@ -542,7 +715,26 @@ class Channel(SlottedModel, Permissible):
 
     def set_slowmode(self, interval, reason=None):
         """
-        Sets the channels slowmode (rate_limit_per_user).
+        Sets the channels slowmode
+
+        Slowmode is used to restrict how many messages a user can send at once
+
+        Parameters
+        ----------
+        interval : int
+            The amount of seconds users have to wait after sending a message (between 0-21600 inclusive)
+        reason : str
+            Reason for channel slowmode update
+
+        Returns
+        -------
+        :class:`~disco.types.channel.Channel`
+            Updated version of the channel
+
+        Raises
+        ------
+        AssertionError
+            Raised if the channel is not a guild text channel
         """
         assert (self.type == ChannelType.GUILD_TEXT)
         return self.client.api.channels_modify(
@@ -552,8 +744,27 @@ class Channel(SlottedModel, Permissible):
 
     def create_text_channel(self, *args, **kwargs):
         """
-        Creates a sub-text-channel in this category. See `Guild.create_text_channel`
-        for arguments and more information.
+        Create text channel under this category
+
+        Creates a text channel under this channel to keep channels organized.
+        This can only be used if the channel is a category.
+
+        Parameters
+        ----------
+        args
+            Arguments to be passed into :func:`~disco.types.guild.Guild.create_text_channel`
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.types.Guild.create_text_channel`
+
+        Returns
+        -------
+        :class:`~disco.types.channel.Channel`
+            Created text channel
+
+        Raises
+        ------
+        ValueError
+            Raised if the channel is not a category channel
         """
         if self.type != ChannelType.GUILD_CATEGORY:
             raise ValueError('Cannot create a sub-channel on a non-category channel')
@@ -566,8 +777,27 @@ class Channel(SlottedModel, Permissible):
 
     def create_voice_channel(self, *args, **kwargs):
         """
-        Creates a sub-voice-channel in this category. See `Guild.create_voice_channel`
-        for arguments and more information.
+        Create voice channel under this category
+
+        Creates a voice channel under this channel to keep channels organized.
+        This can only be used if the channel is a category.
+
+        Parameters
+        ----------
+        args
+            Arguments to be passed into :func:`~disco.types.guild.Guild.create_voice_channel`
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.types.Guild.create_voice_channel`
+
+        Returns
+        -------
+        :class:`~disco.types.channel.Channel`
+            Created text channel
+
+        Raises
+        ------
+        ValueError
+            Raised if the channel is not a category channel
         """
         if self.type != ChannelType.GUILD_CATEGORY:
             raise ValueError('Cannot create a sub-channel on a non-category channel')
@@ -581,18 +811,24 @@ class Channel(SlottedModel, Permissible):
 
 class MessageIterator(object):
     """
-    An iterator which supports scanning through the messages for a channel.
+    Message iterator
 
-    Parameters
+    The discord API allows you to fetch 100 messages at once.
+    After that 100 you need to create a new request based on the last messages's snowflake.
+    This class makes interacting with the api much easier, and provides a constant stream of messages.
+    This is used internally for :func:`~disco.types.channel.Channel.messages_iter`,
+    and the :attr:`~disco.types.channel.Channel.messages` attribute.
+
+    Attributes
     ----------
-    client : :class:`disco.client.Client`
+    client : :class:`~disco.client.Client`
         The disco client instance to use when making requests.
-    channel : `Channel`
+    channel : :class:`~disco.types.channel.Channel`
         The channel to iterate within.
-    direction : :attr:`MessageIterator.Direction`
-        The direction in which this iterator will move.
+    direction : :attr:`~disco.types.channel.MessageIterator.Direction`
+        The direction in which the iterator will move.
     bulk : bool
-        If true, this iterator will yield messages in list batches, otherwise each
+        If true, the iterator will yield messages in list batches, otherwise each
         message will be yield individually.
     before : snowflake
         The message to begin scanning at.
@@ -602,6 +838,16 @@ class MessageIterator(object):
         The number of messages to request per API call.
     """
     class Direction(object):
+        """
+        What direction to go when traversing a channel
+
+        Attributes
+        ----------
+        UP : int
+            Search through messages earliest to oldest
+        DOWN : int
+            Search through messages oldest to earliest
+        """
         UP = 1
         DOWN = 2
 
@@ -622,9 +868,14 @@ class MessageIterator(object):
 
     def fill(self):
         """
-        Fills the internal buffer up with :class:`disco.types.message.Message` objects from the API.
+        Fetch messages
 
-        Returns a boolean indicating whether items were added to the buffer.
+        Fills the internal buffer up with :class:`~disco.types.message.Message` objects from the API.
+
+        Returns
+        -------
+        bool
+            If True, the buffer was filled with more messages
         """
         self._buffer = self.client.api.channels_messages_list(
             self.channel.id,
@@ -648,6 +899,19 @@ class MessageIterator(object):
         return True
 
     def next(self):
+        """
+        Get the next message
+
+        Returns
+        -------
+        :class:`~disco.types.message.Message`
+            The next message in the channel
+
+        Raises
+        ------
+        StopIteration
+            Raised when there are no more messages left
+        """
         return self.__next__()
 
     def __iter__(self):
