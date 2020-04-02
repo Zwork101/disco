@@ -38,20 +38,28 @@ class GuildEmoji(Emoji):
     """
     An emoji object.
 
+    If the id is none, then this is a normal Unicode emoji, otherwise it's a custom discord emoji.
+
     Attributes
     ----------
-    id : snowflake
+    id : snowflake or None
         The ID of this emoji.
     name : str
         The name of this emoji.
+    guild_id : snowflake
+        The snowflake of the guild this emoji belongs too (Not available for unicode emojis)
     require_colons : bool
-        Whether this emoji requires colons to use.
+        Whether this emoji requires colons to use. (Not available for unicode emojis)
     managed : bool
-        Whether this emoji is managed by an integration.
+        Whether this emoji is managed by an integration. (Not available for unicode emojis)
     roles : list(snowflake)
-        Roles this emoji is attached to.
+        Roles this emoji is attached to. (Not available for unicode emojis)
     animated : bool
-        Whether this emoji is animated.
+        Whether this emoji is animated. (Not available for unicode emojis)
+    url : str
+        A url to the image of this emoji. (Not available for unicode emojis)
+    guild : :class:`~disco.types.guild.Guild`
+        The guild this emoji belongs too (Not available for unicode emojis)
     """
     id = Field(snowflake)
     guild_id = Field(snowflake)
@@ -60,14 +68,35 @@ class GuildEmoji(Emoji):
     managed = Field(bool)
     roles = ListField(snowflake)
     animated = Field(bool)
+    available = Field(bool)
 
     def __str__(self):
         return u'<{}:{}:{}>'.format('a' if self.animated else '', self.name, self.id)
 
     def update(self, **kwargs):
+        """
+        Update emoji settings
+
+        Update the settings for this non-unicode emoji
+
+        Parameters
+        ----------
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.api.client.APIClient.guilds_emojis_modify`
+        """
         return self.client.api.guilds_emojis_modify(self.guild_id, self.id, **kwargs)
 
     def delete(self, **kwargs):
+        """
+        Delete emoji
+
+        Remove this non-unicode emoji from the guild
+
+        Parameters
+        ----------
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.api.client.APIClient.guilds_emojis_delete`
+        """
         return self.client.api.guilds_emojis_delete(self.guild_id, self.id, **kwargs)
 
     @property
@@ -80,12 +109,23 @@ class GuildEmoji(Emoji):
 
 
 class PruneCount(SlottedModel):
+    """
+    Amount of people getting pruned
+
+    Attributes
+    ----------
+    pruned : int or None
+        The amount of people getting pruned if applicable
+    """
     pruned = Field(int, default=None)
 
 
 class Role(SlottedModel):
     """
     A role object.
+
+    Discord guild role. Roles can be used to seperate users on the member list,
+    color people's names and give people permissions.
 
     Attributes
     ----------
@@ -103,6 +143,12 @@ class Role(SlottedModel):
         The permissions this role grants.
     position : int
         The position of this role in the hierarchy.
+    mentionable : bool
+        Whether this role can be mentioned by anyone
+    mention : str
+        A string mentioning the role
+    guild : :class:`~disco.types.guild.Guild`
+        The guild this emoji belongs too
     """
     id = Field(snowflake)
     guild_id = Field(snowflake)
@@ -118,9 +164,27 @@ class Role(SlottedModel):
         return self.name
 
     def delete(self, **kwargs):
+        """
+        Delete role
+
+        Parameters
+        ----------
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.types.guild.Guild.delete_role`
+        """
         self.guild.delete_role(self, **kwargs)
 
     def update(self, *args, **kwargs):
+        """
+        Update role
+
+        Parameters
+        ----------
+        args
+            Arguments to be passed into :func:`~disco.types.guild.Guild.update_role`
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.types.guild.Guild.update_role`
+        """
         self.guild.update_role(self, *args, **kwargs)
 
     @property
@@ -133,37 +197,72 @@ class Role(SlottedModel):
 
 
 class GuildBan(SlottedModel):
+    """
+    Guild ban
+
+    Attributes
+    ----------
+    user : :class:`~disco.types.user.User`
+        The user that was banned
+    reason : str
+        The reason they were banned
+    """
     user = Field(User)
     reason = Field(text)
 
 
 class GuildEmbed(SlottedModel):
+    """
+    Guild embed
+
+    Attributes
+    ----------
+    enabled : bool
+        If the guild has it's embed enabled
+    channel_id : snowflake
+        The channel that's displayed on the guild embed
+    """
     enabled = Field(bool)
     channel_id = Field(snowflake)
 
 
 class GuildMember(SlottedModel):
     """
-    A GuildMember object.
+    A guild member
+
+    Guild members are essentially wrappers on user that depend on the guild.
+    this includes information like nick names, roles, etc.
 
     Attributes
     ----------
-    user : :class:`disco.types.user.User`
+    id : snowflake
+        The id of the user
+    user : :class:`~disco.types.user.User`
         The user object of this member.
     guild_id : snowflake
         The guild this member is part of.
     nick : str
         The nickname of the member.
+    name : str
+        The name of the member (the nickname if they have one, elsewise they're username)
     mute : bool
         Whether this member is server voice-muted.
     deaf : bool
         Whether this member is server voice-deafened.
     joined_at : datetime
         When this user joined the guild.
-    roles : list(snowflake)
+    roles : list of snowflake
         Roles this member is part of.
     premium_since : datetime
         When this user set their Nitro boost to this server.
+    owner : bool
+        If this member is the owner of the guild
+    mention : str
+        A string that mentions the member (different than user mention if they have nick)
+    guild : :class:`~disco.types.guild.Guild`
+        The guild this member belongs too
+    permissions : :class:`disco.types.permissions.PermissionValue`
+        The permissions the user has on this guild, ignoring channel overwrites
     """
     user = Field(User)
     guild_id = Field(snowflake)
@@ -179,16 +278,15 @@ class GuildMember(SlottedModel):
 
     @property
     def name(self):
-        """
-        The nickname of this user if set, otherwise their username
-        """
         return self.nick or self.user.username
 
     def get_voice_state(self):
         """
+        Get current voice state
+
         Returns
         -------
-        Optional[:class:`disco.types.voice.VoiceState`]
+        :class:`disco.types.voice.VoiceState` or None
             Returns the voice state for the member if they are currently connected
             to the guild's voice server.
         """
@@ -197,6 +295,12 @@ class GuildMember(SlottedModel):
     def kick(self, **kwargs):
         """
         Kicks the member from the guild.
+
+        Parameters
+        ----------
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.api.client.APIClient.guilds_members_kick`
+
         """
         self.client.api.guilds_members_kick(self.guild.id, self.user.id, **kwargs)
 
@@ -208,23 +312,35 @@ class GuildMember(SlottedModel):
         ----------
         delete_message_days : int
             The number of days to retroactively delete messages for.
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.types.guild.Guild.create_ban`
         """
         self.guild.create_ban(self, delete_message_days, **kwargs)
 
     def unban(self, **kwargs):
         """
-        Unbans the member from the guild.
+        Unbans a member from the guild.
+
+        Parameters
+        ----------
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.types.guild.Guild.delete_ban`
         """
         self.guild.delete_ban(self, **kwargs)
 
     def set_nickname(self, nickname=None, **kwargs):
         """
-        Sets the member's nickname (or clears it if None).
+        Sets the member's nickname
+
+        Set's a guild member's username. If the nicname provided is None, their name will be reset.
+        This same method can be used if the guild member is the bot.
 
         Parameters
         ----------
-        nickname : Optional[str]
+        nickname : str or None
             The nickname (or none to reset) to set.
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.api.client.APIClient.guilds_members_modify`.
         """
         if self.client.state.me.id == self.user.id:
             self.client.api.guilds_members_me_nick(self.guild.id, nick=nickname or '', **kwargs)
@@ -233,17 +349,47 @@ class GuildMember(SlottedModel):
 
     def disconnect(self):
         """
-        Disconnects the member from voice (if they are connected).
+        Disconnects the member from voice.
+
+        Removes this member from their choice channel, does nothing if they're not in a voice channel
         """
         self.modify(channel_id=None)
 
     def modify(self, **kwargs):
+        """
+        Modify this guild member
+
+        Parameters
+        ----------
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.api.client.APIClient.guilds_members_modify`.
+        """
         self.client.api.guilds_members_modify(self.guild.id, self.user.id, **kwargs)
 
     def add_role(self, role, **kwargs):
+        """
+        Add role to this guild member
+
+        Parameters
+        ----------
+        role : :class:`~disco.types.guild.Role` or snowflake
+            The role to add to this member
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.api.client.APIClient.guilds_members_roles_add`.
+        """
         self.client.api.guilds_members_roles_add(self.guild.id, self.user.id, to_snowflake(role), **kwargs)
 
     def remove_role(self, role, **kwargs):
+        """
+        Remove role to this guild member
+
+        Parameters
+        ----------
+        role : :class:`~disco.types.guild.Role` or snowflake
+            The role to remove from this member
+        kwargs
+            Keyword arguments to be passed into :func:`~disco.api.client.APIClient.guilds_members_roles_remove`.
+        """
         self.client.api.guilds_members_roles_remove(self.guild.id, self.user.id, to_snowflake(role), **kwargs)
 
     @cached_property
@@ -258,9 +404,6 @@ class GuildMember(SlottedModel):
 
     @property
     def id(self):
-        """
-        Alias to the guild members user id.
-        """
         return self.user.id
 
     @cached_property
@@ -276,12 +419,16 @@ class Guild(SlottedModel, Permissible):
     """
     A guild object.
 
+    Discord guilds are the parent to almost all discord objects, with the exception of DMs.
+
     Attributes
     ----------
     id : snowflake
         The id of this guild.
     owner_id : snowflake
         The id of the owner.
+    owner : :class:~disco.types.guild.GuildMember`
+        The owner as a member
     afk_channel_id : snowflake
         The id of the afk channel.
     embed_channel_id : snowflake
@@ -306,17 +453,17 @@ class Guild(SlottedModel, Permissible):
         The verification level used by the guild.
     mfa_level : int
         The MFA level used by the guild.
-    features : list(str)
+    features : list of str
         Extra features enabled for this guild.
-    members : dict(snowflake, :class:`GuildMember`)
+    members : dict of snowflake to :class:`~disco.types.guild.GuildMember`
         All of the guild's members.
-    channels : dict(snowflake, :class:`disco.types.channel.Channel`)
+    channels : dict of snowflake to :class:`~disco.types.channel.Channel`
         All of the guild's channels.
-    roles : dict(snowflake, :class:`Role`)
+    roles : dict of snowflake to :class:`~disco.types.guild.Role`
         All of the guild's roles.
-    emojis : dict(snowflake, :class:`GuildEmoji`)
+    emojis : dict of snowflake to :class:`~disco.types.guild.GuildEmoji`
         All of the guild's emojis.
-    voice_states : dict(str, :class:`disco.types.voice.VoiceState`)
+    voice_states : dict of str to :class:`~disco.types.voice.VoiceState`
         All of the guild's voice states.
     premium_tier : int
         Guild's premium tier.
@@ -370,9 +517,14 @@ class Guild(SlottedModel, Permissible):
         """
         Get the permissions a user has in this guild.
 
+        Parameters
+        ----------
+        member : :class:`~disco.types.guild.GuildMember` or snowflake
+            Member to get the permissions for
+
         Returns
         -------
-        :class:`disco.types.permissions.PermissionValue`
+        :class:`~disco.types.permissions.PermissionValue`
             Computed permission value for the user.
         """
         if not isinstance(member, GuildMember):
@@ -393,12 +545,20 @@ class Guild(SlottedModel, Permissible):
 
     def get_voice_state(self, user):
         """
+        Get voice state
+
         Attempt to get a voice state for a given user (who should be a member of
         this guild).
 
+        Parameters
+        ----------
+        user : :class:`~disco.types.guild.GuildMember` or snowflake
+            The guild member to get the voice state of
+
+
         Returns
         -------
-        :class:`disco.types.voice.VoiceState`
+        :class:`~disco.types.voice.VoiceState`
             The voice state for the user in this guild.
         """
         user = to_snowflake(user)
@@ -411,9 +571,14 @@ class Guild(SlottedModel, Permissible):
         """
         Attempt to get a member from a given user.
 
+        Parameters
+        ----------
+        user : :class:`~disco.types.user.User` or snowflake
+            The user to get member status of
+
         Returns
         -------
-        :class:`GuildMember`
+        :class:`~disco.types.guild.GuildMember`
             The guild member object for the given user.
         """
         user = to_snowflake(user)

@@ -392,7 +392,7 @@ class Channel(SlottedModel, Permissible):
     def create_pin(self, message):
         """
         Pins the given message to the channel.
-        
+
 
         Parameters
         ----------
@@ -415,7 +415,7 @@ class Channel(SlottedModel, Permissible):
     def get_webhooks(self):
         """
         Fetchs all webhooks operating on the channel
-        
+
         Returns
         -------
         list of :class:`~disco.types.webhook.Webhook`
